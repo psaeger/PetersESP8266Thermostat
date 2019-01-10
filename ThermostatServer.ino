@@ -1,18 +1,13 @@
 //Wifi & Server
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
-#include <ESP8266WiFiMulti.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>   // Include the SPIFFS library
 
-/*
-  // Set Static IP
-  // Commented out because caused MAJOR latency for some reason
-  IPAddress staticIP(192,168,10,77);
-  IPAddress gateway(192,168,10,5);
-  IPAddress subnet(255,255,255,0);
-*/
-ESP8266WiFiMulti wifiMulti;     // Create an instance of the ESP8266WiFiMulti class, called 'wifiMulti'
+// Static IP
+IPAddress staticIP(192, 168, 10, 77);
+IPAddress gateway(192, 168, 10, 5);
+IPAddress subnet(255, 255, 255, 0);
+
 
 ESP8266WebServer server(80);    // Create a webserver object that listens for HTTP request on port 80
 
@@ -42,20 +37,16 @@ float HighTemp = 65.0;
 
 //Partial Loop
 long previousMillis = 0;
-long interval = 3000;
+long interval = 30000;
 
 void setup() {
   Serial.begin(9600);
   Serial.println('\n');
 
-  wifiMulti.addAP("DS9", "Guest21065");
-  wifiMulti.addAP("Voyager", "Skiingon88");
-  wifiMulti.addAP("Enterprise", "Skiingon88");
-  
+  WiFi.begin("Voyager", "Skiingon88");
+  WiFi.config(staticIP, gateway, subnet);
   Serial.println("Connecting ...");
-  int i = 0;
-  //WiFi.config(staticIP, gateway, subnet); // Static IP - Disabled due to Latency
-  while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+  while (WiFi.status() != WL_CONNECTED) {               // Wait for the Wi-Fi to connect
     delay(250);
     Serial.print('.');
   }
@@ -65,7 +56,7 @@ void setup() {
   Serial.print("IP address:\t");
   Serial.println(WiFi.localIP());
 
-  SPIFFS.begin();                           // Start the SPI Flash Files System
+  SPIFFS.begin();                                       // Start the SPI Flash Files System
   server.on("/statusRequest", handleStatusRequest);
   server.on("/tempChange", handleTempChange);
   server.onNotFound([]() {                              // If the client requests any URI
@@ -76,7 +67,7 @@ void setup() {
   server.begin();                           // Actually start the server
   Serial.println("HTTP server started\n");
   DHT1.begin();
-  pinMode(RELAYPIN, OUTPUT);                
+  pinMode(RELAYPIN, OUTPUT);
   digitalWrite(RELAYPIN, LOW);              // Turn off relay to start
 
   // Initialize all the temp readings to 60:
@@ -139,19 +130,19 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
 
 // Function to report current temperature and relay status to website
 void handleStatusRequest() {
-  String 
+  String
   statusRequest = "{\"temperature\":";
   statusRequest += String(currentAverageTemp);
   statusRequest += ",\"relayStatus\":";
   statusRequest += String(RelayON);
   statusRequest += "}";
-  server.send(200, "text/plane",String(statusRequest));
+  server.send(200, "text/plane", String(statusRequest));
   Serial.println(String(statusRequest));
 }
 
 // Function to Update Temps
 void handleTempChange() {
-  
+
   if ( !server.hasArg("LowTemp") || !server.hasArg("HighTemp") || server.arg("LowTemp") == NULL || server.arg("HighTemp") == NULL) {//Post Request doesn't have both temps
     server.send(400, "text/html", "400: Invalid Request <br /> Both Temperatures are Required");
     return;
@@ -162,11 +153,11 @@ void handleTempChange() {
   message = "URI: ";
   message += server.uri();
   message += "\nMethod: ";
-  message += (server.method() == HTTP_GET)?"GET":"POST";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
   message += "\nArguments: ";
   message += server.args();
   message += "\n";
-  for (uint8_t i=0; i<server.args(); i++){
+  for (uint8_t i = 0; i < server.args(); i++) {
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   }
   Serial.println(message);

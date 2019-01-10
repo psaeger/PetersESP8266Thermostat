@@ -1,48 +1,27 @@
 <!DOCTYPE html>
 <HTML>
 	<HEAD>
-		<TITLE>Peter's Garage Thermostat</TITLE>
-
-		<style>
-		#main {margin:auto; width:600px;}
-		#titleHeading {font-size:40px; padding:10px;}
-		
-		#clear {clear:both;}
-		
-		#temp {margin:auto; width:600px;}
-		#temp div {float:left;}
-		
-		</style>
-		
+		<TITLE>Garage Thermostat</TITLE>
+		<link rel="stylesheet" href="styles.css">
+		<script src="script.js"></script>
 	</HEAD>
 <BODY>
 	<div id="main">
 		<div id="titleHeading">Peter's Garage Thermostat</div>
 		<div id="clear"></div>
-		<div id="temp">
-			<div id="tempTitle"> Temperature:&nbsp;</div>
-			<div id="TempValue"> 0 </div>
-			<div id="degree">&deg;F</div>
+		<div id="temperature" class="heatOff">
+			<span id="tempTitle">Temperature:&nbsp;</span>
+			<span id="TempValue">Loading...</span>
+			<span id="degree">&deg;F</span>
 		</div>
-		<div id="clear"></div>
-		<div id="form">
-			<FORM Action="/tempChange "method=POST>
-				Set Low Temp to: <INPUT Type=int name="LowTemp" value="" size="5"><br />
-				Set High Temp to: <INPUT Type=int name="HighTemp" value="" size="5"><br />
-				<INPUT Type=Submit name="submit" Value="Update Temps"><br />
-			</FORM>
+		<div class="clear" style="height:50px;"></div>
+		<div id="form1" class="form">
+			<form name="tempUpdate" Action="/tempChange "method=post>
+				<div class="formRow">Set Low Temp to: <input Type=int name="LowTemp" value="" min="50" max="70" size="5"></div>
+				<div class="formRow">Set High Temp to: <input Type=int name="HighTemp" value="" min="60" max="80" size="5"></div>
+				<div class="clear"></div>
+				<div class="formRow"><button Type="button" onclick="submitForm()">Update Temps</button></div>
+			</form>
 	</div>	
-		<script type="text/javascript">
-		setInterval(readTemp,2000);
-		function readTemp() {
-			var xhttp = new XMLHttpRequest();
-			xhttp.onreadystatechange = function() {
-				if (this.readyState == 4 && this.status == 200) {
-				document.getElementById("TempValue").innerHTML =this.responseText}
-			};
-		xhttp.open("GET", "readTemp", true);
-		xhttp.send();
-		}
-	</script>
 </BODY>
 </HTML>

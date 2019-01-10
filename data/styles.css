@@ -1,0 +1,42 @@
+#main 
+{
+	margin:auto; 
+	width:600px;
+}
+
+#titleHeading 
+{
+	font-size:40px;
+	padding:10px;
+	text-align:center;
+}
+
+#clear 
+{
+	clear:both;
+}
+
+#temperature 
+{
+	padding:5px;
+	font-size:20px; 
+	font-weight:bold; 
+	display:block;
+	text-align:center;
+}
+
+.heatOff
+{
+	color:black;
+}
+
+.heatOn
+{
+	color:red;
+}
+
+.formRow 
+{
+	padding:5px;
+	float:left;
+}

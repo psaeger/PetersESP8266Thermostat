@@ -43,7 +43,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println('\n');
 
-  WiFi.begin("Voyager", "Skiingon88");
+  WiFi.begin("ssid", "password");
   WiFi.config(staticIP, gateway, subnet);
   Serial.println("Connecting ...");
   while (WiFi.status() != WL_CONNECTED) {               // Wait for the Wi-Fi to connect

@@ -1,7 +1,12 @@
 #main 
 {
-	margin:auto; 
-	width:600px;
+	margin:auto;
+	width: 550px;
+	border: 1px black solid;
+	border-radius: 20px;
+	padding: 20px 0px 20px 0px;
+	font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+	background:#00000036;
 }
 
 #titleHeading 
@@ -25,6 +30,21 @@
 	text-align:center;
 }
 
+.heatText
+{
+	padding:5px;
+	font-size:15px; 
+	font-weight:bold; 
+	text-align:center;
+	width:100%;
+	color:red;
+}
+
+.currentTemp
+{
+	padding:5px;
+	text-align:center;
+}
 .heatOff
 {
 	color:black;
@@ -38,5 +58,5 @@
 .formRow 
 {
 	padding:5px;
-	float:left;
+	text-align:center;
 }

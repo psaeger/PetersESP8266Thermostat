@@ -37,7 +37,7 @@ float HighTemp = 65.0;
 
 //Partial Loop
 long previousMillis = 0;
-long interval = 30000;
+long interval = 1000;
 
 void setup() {
   Serial.begin(9600);
@@ -135,6 +135,10 @@ void handleStatusRequest() {
   statusRequest += String(currentAverageTemp);
   statusRequest += ",\"relayStatus\":";
   statusRequest += String(RelayON);
+  statusRequest += ",\"lowTemp\":";
+  statusRequest += String(LowTemp);
+  statusRequest += ",\"highTemp\":";
+  statusRequest += String(HighTemp);
   statusRequest += "}";
   server.send(200, "text/plane", String(statusRequest));
   Serial.println(String(statusRequest));
@@ -161,15 +165,18 @@ void handleTempChange() {
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   }
   Serial.println(message);
-  Serial.println("\nCurrent Low Temp: " + String(LowTemp));
-  Serial.println("\nCurrent High Temp: " + String(HighTemp));
+  
   //Set new values
   LowTemp = server.arg("LowTemp").toFloat();
   HighTemp = server.arg("HighTemp").toFloat();
   //Report new values
-  Serial.println("\nNew Low Temp: " + String(LowTemp));
-  Serial.println("\nNew High Temp: " + String(HighTemp));
-  server.send ( 200, "text/plain", "Updated" );
+  String
+  updateRepsonse = "{\"lowTemp\":";
+  updateRepsonse += String(LowTemp);
+  updateRepsonse += ",\"highTemp\":";
+  updateRepsonse += String(HighTemp);
+  updateRepsonse += "}";
+  server.send ( 200, "text/plain", String(updateRepsonse) );
 }
 
 

@@ -14,15 +14,20 @@
 			<span id="TempValue">Loading...</span>
 			<span id="degree">&deg;F</span>
 		</div>
+		<div id="heatingText" class="heatText" style="display:none;">Heating</div>
+		<div class="clear" style="height:20px;"></div>
+		<div id="currentSettings">
+			<div class="currentTemp">Low Temp Setting: <span id="lowTemp">N/A</span></div>
+			<div class="currentTemp">High Temp Setting: <span id="highTemp">N/A</span></div>
+		</div>
 		<div class="clear" style="height:50px;"></div>
 		<div id="form1" class="form">
-			<form name="tempUpdate" Action="/tempChange "method=post>
-				<div class="formRow">Set Low Temp to: <input Type=int name="LowTemp" value="" min="50" max="70" size="5"></div>
-				<div class="formRow">Set High Temp to: <input Type=int name="HighTemp" value="" min="60" max="80" size="5"></div>
+			<form id="tempUpdate">
+				<div class="formRow">Set Low Temp to: <input class="tempInput" type="number" name="LowTemp" value="" min="45" max="70" size="5"></div>
+				<div class="formRow">Set High Temp to: <input class="tempInput" type="number" name="HighTemp" value="" min="55" max="80" size="5"></div>
 				<div class="clear"></div>
-				<div class="formRow"><button Type="button" onclick="submitForm()">Update Temps</button></div>
+				<div class="formRow"><input Type="submit" value="Update Temps"></div>
 			</form>
-			<div id="form-messages"></div>
 	</div>	
 </BODY>
 </HTML>

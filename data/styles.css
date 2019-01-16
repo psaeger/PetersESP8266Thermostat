@@ -1,12 +1,17 @@
 #main 
 {
 	margin:auto;
-	width: 550px;
+	width: 650px;
 	border: 1px black solid;
 	border-radius: 20px;
 	padding: 20px 0px 20px 0px;
 	font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 	background:#00000036;
+}
+#chart
+{
+	margin:auto;
+	width: 600px;
 }
 
 #titleHeading 

@@ -7,12 +7,26 @@
 IPAddress staticIP(192, 168, 10, 77);
 IPAddress gateway(192, 168, 10, 5);
 IPAddress subnet(255, 255, 255, 0);
+IPAddress dns(192, 168, 10, 5);
 
+#ifndef STASSID
+#define STASSID "******"
+#define STAPSK  "******"
+#endif
+
+const char* ssid     = STASSID;
+const char* password = STAPSK;
 
 ESP8266WebServer server(80);    // Create a webserver object that listens for HTTP request on port 80
 
 String getContentType(String filename); // convert the file extension to the MIME type
 bool handleFileRead(String path);       // send the right file to the client (if it exists)
+
+char serverName[] = "api.pushingbox.com";
+boolean lastConnected = false;
+char DEVID1[] = "*******";
+boolean DEBUG = true;
+WiFiClient client;
 
 //Temp Sensor
 #include <DHT.h>
@@ -30,21 +44,26 @@ int tempReadIndex = 0;                             // the index of the current r
 float tempReadingsTotal = 0.0;
 float currentAverageTemp = 0.0;
 bool RelayON = false;
+int heatStatus;
 
 //Temperature Range
 float LowTemp = 50.0;
 float HighTemp = 65.0;
 
-//Partial Loop
+//Temp Check Loop Delay
 long previousMillis = 0;
 long interval = 1000;
+
+//Send Temp Loop Delay
+long previousMillis2 = 0;
+long interval2 = 120000;
 
 void setup() {
   Serial.begin(9600);
   Serial.println('\n');
-
-  WiFi.begin("ssid", "password");
-  WiFi.config(staticIP, gateway, subnet);
+  WiFi.mode(WIFI_STA);
+  WiFi.config(staticIP, gateway, subnet, dns);
+  WiFi.begin(ssid, password);
   Serial.println("Connecting ...");
   while (WiFi.status() != WL_CONNECTED) {               // Wait for the Wi-Fi to connect
     delay(250);
@@ -79,22 +98,32 @@ void setup() {
 
 void loop(void) {
   server.handleClient();
+
+
+  unsigned long currentMillis2 = millis();
+  if (currentMillis2 - previousMillis2 > interval2) {
+    previousMillis2 = currentMillis2;
+    recordData(DEVID1);
+  }
+
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis > interval) {
     previousMillis = currentMillis;
     updateTempAverage();
-    //updateRelayStatus(RelayON);
+    updateRelayStatus(RelayON);
     if (RelayON == true) {
       // Check to see if conditions to shut off are met:
       if (currentAverageTemp > HighTemp) {
         RelayON = false;
         digitalWrite(RELAYPIN, LOW);
+        recordData(DEVID1);
       }
     } else {
       // Check to see if conditions to call for heat are met:
       if (currentAverageTemp < LowTemp) {
         RelayON = true;
         digitalWrite(RELAYPIN, HIGH);
+        recordData(DEVID1);
       }
     }
     Serial.println("LastReading: " + String(MostRecentTempRead));
@@ -165,7 +194,7 @@ void handleTempChange() {
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   }
   Serial.println(message);
-  
+
   //Set new values
   LowTemp = server.arg("LowTemp").toFloat();
   HighTemp = server.arg("HighTemp").toFloat();
@@ -217,4 +246,42 @@ void updateTempAverage() {
 
   // calculate the average
   currentAverageTemp = tempReadingsTotal / tempSmoothing;
+}
+
+// Function to send data to pushingbox/googlesheet
+void recordData(char devid[]) {
+  client.stop(); if (DEBUG) {
+    Serial.println("connecting...");
+  }
+  if (client.connect(serverName, 80)) {
+    if (DEBUG) {
+      Serial.println("connected");
+    }
+    if (DEBUG) {
+      Serial.println("sending request");
+    }
+    if (RelayON) {
+      heatStatus = 40;
+    }
+    else {
+      heatStatus = 0;
+    }
+    client.print("GET /pushingbox?devid=");
+    client.print(devid);
+    client.print("&currentAverageTemp=");
+    client.print(currentAverageTemp);
+    client.print("&heatStatus=");
+    client.print(heatStatus);
+    //client.print(RelayON);
+    client.println(" HTTP/1.1");
+    client.print("Host: ");
+    client.println(serverName);
+    client.println("User-Agent: Arduino");
+    client.println();
+  }
+  else {
+    if (DEBUG) {
+      Serial.println("connection failed");
+    }
+  }
 }

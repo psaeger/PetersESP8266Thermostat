@@ -2,31 +2,39 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>   // Include the SPIFFS library
+#include <MySQL_Connection.h>
+#include <MySQL_Cursor.h>
 
 // Static IP
-IPAddress staticIP(192, 168, 10, 77);
+IPAddress staticIP(192, 168, 10, 78);
 IPAddress gateway(192, 168, 10, 5);
 IPAddress subnet(255, 255, 255, 0);
-IPAddress dns(192, 168, 10, 5);
+IPAddress dns2(192, 168, 10, 5);
 
-#ifndef STASSID
-#define STASSID "******"
-#define STAPSK  "******"
-#endif
+const char* ssid     = "****";
+const char* password = "****";
 
-const char* ssid     = STASSID;
-const char* password = STAPSK;
-
-ESP8266WebServer server(80);    // Create a webserver object that listens for HTTP request on port 80
+ESP8266WebServer server(80);    // Create a webserver
 
 String getContentType(String filename); // convert the file extension to the MIME type
 bool handleFileRead(String path);       // send the right file to the client (if it exists)
 
 char serverName[] = "api.pushingbox.com";
 boolean lastConnected = false;
-char DEVID1[] = "*******";
+char DEVID1[] = "****";
 boolean DEBUG = true;
 WiFiClient client;
+MySQL_Connection conn((Client *)&client);
+
+//Mysql Query
+char INSERT_SQL[] = "INSERT INTO TemperatureStats.garageHeatStats(temperature, heatStatus) VALUES (%s,%d)";
+char query[128];
+char tempValue[10];
+
+//Mysql Server Details
+IPAddress server_addr(192, 168, 10, 50);          // MySQL server IP
+char user[] = "****";           // MySQL user
+char sqlpassword[] = "****";       // MySQL password
 
 //Temp Sensor
 #include <DHT.h>
@@ -38,11 +46,11 @@ WiFiClient client;
 DHT DHT1(DHTPIN, DHTTYPE);
 
 float MostRecentTempRead = 0.0;
-const int tempSmoothing = 5;                       // How many readings to take a running average from
+const int tempSmoothing = 30;                       // How many readings to take a running average from
 float tempReadings[tempSmoothing];                   // the readings from the analog input
 int tempReadIndex = 0;                             // the index of the current reading
 float tempReadingsTotal = 0.0;
-float currentAverageTemp = 0.0;
+float currentAverageTemp = 61.11;
 bool RelayON = false;
 int heatStatus;
 
@@ -54,15 +62,15 @@ float HighTemp = 65.0;
 long previousMillis = 0;
 long interval = 1000;
 
-//Send Temp Loop Delay
+//Record mySQL Temp Loop Delay
 long previousMillis2 = 0;
-long interval2 = 120000;
+long interval2 = 60000;
 
 void setup() {
   Serial.begin(9600);
   Serial.println('\n');
   WiFi.mode(WIFI_STA);
-  WiFi.config(staticIP, gateway, subnet, dns);
+  WiFi.config(staticIP, gateway, subnet, dns2);
   WiFi.begin(ssid, password);
   Serial.println("Connecting ...");
   while (WiFi.status() != WL_CONNECTED) {               // Wait for the Wi-Fi to connect
@@ -85,6 +93,17 @@ void setup() {
 
   server.begin();                           // Actually start the server
   Serial.println("HTTP server started\n");
+
+  Serial.println("Connecting to database");
+
+  while (conn.connect(server_addr, 3306, user, sqlpassword) != true) {
+    delay(200);
+    Serial.print ( "." );
+  }
+
+  Serial.println("");
+  Serial.println("Connected to SQL Server!");
+
   DHT1.begin();
   pinMode(RELAYPIN, OUTPUT);
   digitalWrite(RELAYPIN, LOW);              // Turn off relay to start
@@ -99,11 +118,11 @@ void setup() {
 void loop(void) {
   server.handleClient();
 
-
+  
   unsigned long currentMillis2 = millis();
   if (currentMillis2 - previousMillis2 > interval2) {
     previousMillis2 = currentMillis2;
-    recordData(DEVID1);
+    recordData2();
   }
 
   unsigned long currentMillis = millis();
@@ -116,14 +135,14 @@ void loop(void) {
       if (currentAverageTemp > HighTemp) {
         RelayON = false;
         digitalWrite(RELAYPIN, LOW);
-        recordData(DEVID1);
+        //recordData(DEVID1);
       }
     } else {
       // Check to see if conditions to call for heat are met:
       if (currentAverageTemp < LowTemp) {
         RelayON = true;
         digitalWrite(RELAYPIN, HIGH);
-        recordData(DEVID1);
+        //recordData(DEVID1);
       }
     }
     Serial.println("LastReading: " + String(MostRecentTempRead));
@@ -246,6 +265,23 @@ void updateTempAverage() {
 
   // calculate the average
   currentAverageTemp = tempReadingsTotal / tempSmoothing;
+}
+
+// Function to write to MySQL
+void recordData2() {
+  
+  dtostrf(currentAverageTemp,5, 2, tempValue);
+  int heatValue = RelayON;
+  sprintf(query, INSERT_SQL, tempValue, heatValue);
+  
+  Serial.println("Recording data.");
+  Serial.println(query);
+
+  MySQL_Cursor *cur_mem = new MySQL_Cursor(&conn);
+
+  cur_mem->execute(query);
+
+  delete cur_mem;
 }
 
 // Function to send data to pushingbox/googlesheet

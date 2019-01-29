@@ -19,10 +19,6 @@ ESP8266WebServer server(80);    // Create a webserver
 String getContentType(String filename); // convert the file extension to the MIME type
 bool handleFileRead(String path);       // send the right file to the client (if it exists)
 
-char serverName[] = "api.pushingbox.com";
-boolean lastConnected = false;
-char DEVID1[] = "****";
-boolean DEBUG = true;
 WiFiClient client;
 MySQL_Connection conn((Client *)&client);
 
@@ -50,9 +46,8 @@ const int tempSmoothing = 30;                       // How many readings to take
 float tempReadings[tempSmoothing];                   // the readings from the analog input
 int tempReadIndex = 0;                             // the index of the current reading
 float tempReadingsTotal = 0.0;
-float currentAverageTemp = 61.11;
+float currentAverageTemp = 60;
 bool RelayON = false;
-int heatStatus;
 
 //Temperature Range
 float LowTemp = 50.0;
@@ -118,11 +113,11 @@ void setup() {
 void loop(void) {
   server.handleClient();
 
-  
-  unsigned long currentMillis2 = millis();
-  if (currentMillis2 - previousMillis2 > interval2) {
-    previousMillis2 = currentMillis2;
-    recordData2();
+
+  unsigned long recordingMills = millis();
+  if (recordingMills - previousMillis2 > interval2) {
+    previousMillis2 = recordingMills;
+    recordData();
   }
 
   unsigned long currentMillis = millis();
@@ -135,14 +130,12 @@ void loop(void) {
       if (currentAverageTemp > HighTemp) {
         RelayON = false;
         digitalWrite(RELAYPIN, LOW);
-        //recordData(DEVID1);
       }
     } else {
       // Check to see if conditions to call for heat are met:
       if (currentAverageTemp < LowTemp) {
         RelayON = true;
         digitalWrite(RELAYPIN, HIGH);
-        //recordData(DEVID1);
       }
     }
     Serial.println("LastReading: " + String(MostRecentTempRead));
@@ -154,6 +147,7 @@ void loop(void) {
 
 // Loop End
 
+//SPIFFS File Serving Stuff
 String getContentType(String filename) { // convert the file extension to the MIME type
   if (filename.endsWith(".html")) return "text/html";
   else if (filename.endsWith(".css")) return "text/css";
@@ -161,7 +155,6 @@ String getContentType(String filename) { // convert the file extension to the MI
   else if (filename.endsWith(".ico")) return "image/x-icon";
   return "text/plain";
 }
-
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
   Serial.println("handleFileRead: " + path);
   if (path.endsWith("/")) path += "index.html";         // If a folder is requested, send the index file
@@ -268,12 +261,12 @@ void updateTempAverage() {
 }
 
 // Function to write to MySQL
-void recordData2() {
-  
-  dtostrf(currentAverageTemp,5, 2, tempValue);
+void recordData() {
+
+  dtostrf(currentAverageTemp, 5, 2, tempValue);
   int heatValue = RelayON;
   sprintf(query, INSERT_SQL, tempValue, heatValue);
-  
+
   Serial.println("Recording data.");
   Serial.println(query);
 
@@ -282,42 +275,4 @@ void recordData2() {
   cur_mem->execute(query);
 
   delete cur_mem;
-}
-
-// Function to send data to pushingbox/googlesheet
-void recordData(char devid[]) {
-  client.stop(); if (DEBUG) {
-    Serial.println("connecting...");
-  }
-  if (client.connect(serverName, 80)) {
-    if (DEBUG) {
-      Serial.println("connected");
-    }
-    if (DEBUG) {
-      Serial.println("sending request");
-    }
-    if (RelayON) {
-      heatStatus = 40;
-    }
-    else {
-      heatStatus = 0;
-    }
-    client.print("GET /pushingbox?devid=");
-    client.print(devid);
-    client.print("&currentAverageTemp=");
-    client.print(currentAverageTemp);
-    client.print("&heatStatus=");
-    client.print(heatStatus);
-    //client.print(RelayON);
-    client.println(" HTTP/1.1");
-    client.print("Host: ");
-    client.println(serverName);
-    client.println("User-Agent: Arduino");
-    client.println();
-  }
-  else {
-    if (DEBUG) {
-      Serial.println("connection failed");
-    }
-  }
 }

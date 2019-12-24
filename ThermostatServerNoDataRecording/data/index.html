@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>Garage Thermostat</TITLE>
+		<link rel="stylesheet" href="styles.css">
+		<script src="script.js"></script>
+	</HEAD>
+<BODY>
+	<div id="main">
+		<div id="titleHeading">Shop Thermostat</div>
+		<div id="clear"></div>
+		<div id="temperature" class="heatOff">
+			<span id="tempTitle">Temperature:&nbsp;</span>
+			<span id="TempValue">Loading...</span>
+			<span id="degree">&deg;F</span>
+		</div>
+		<div id="heatingText" class="heatText" style="display:none;">Heating</div>
+		<div class="clear" style="height:20px;"></div>
+		<div id="currentSettings">
+			<div class="currentTemp">Low Temp Setting: <span id="lowTemp">N/A</span></div>
+			<div class="currentTemp">High Temp Setting: <span id="highTemp">N/A</span></div>
+		</div>
+		<div class="clear" style="height:25px;"></div>
+		<!--<div id="chart">
+			<iframe width="600" height="371" seamless frameborder="0" scrolling="no" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSlV5lSI3bWE9uWvAjbb0FM1ZTkx-2oHcxqNSMP4OKPlAzEbEMekwp_MXQ5EA1N2t5cSO4CNNvT_N45/pubchart?oid=672755414&amp;format=interactive"></iframe>
+		</div>
+		<div class="clear" style="height:25px;"></div>
+		-->
+		<div id="form1" class="form">
+			<form id="tempUpdate">
+				<div class="formRow">Set Low Temp to: <input class="tempInput" type="number" name="LowTemp" value="" min="35" max="80" size="5"></div>
+				<div class="formRow">Set High Temp to: <input class="tempInput" type="number" name="HighTemp" value="" min="35" max="80" size="5"></div>
+				<div class="clear"></div>
+				<div class="formRow"><input Type="submit" value="Update Temps"></div>
+			</form>
+		</div>
+	</div>	
+</BODY>
+</HTML>

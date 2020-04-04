@@ -4,14 +4,14 @@
 #include <FS.h>   // Include the SPIFFS library
 
 // Static IP
-IPAddress staticIP(192, 168, 10, 78);
-IPAddress gateway(192, 168, 10, 5);
+IPAddress staticIP(192, 168, 0, 52);
+IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
-IPAddress dns(192, 168, 10, 5);
+IPAddress dns(192, 168, 0, 1);
 
 #ifndef STASSID
-#define STASSID "Voyager"
-#define STAPSK  "Skiingon88"
+#define STASSID "Shop"
+#define STAPSK  "Arthur0801"
 #endif
 
 const char* ssid     = STASSID;
@@ -41,7 +41,7 @@ WiFiClient client;
 DHT DHT1(DHTPIN, DHTTYPE);
 
 float MostRecentTempRead = 0.0;
-const int tempSmoothing = 5;                       // How many readings to take a running average from
+const int tempSmoothing = 30;                       // How many readings to take a running average from
 float tempReadings[tempSmoothing];                   // the readings from the analog input
 int tempReadIndex = 0;                             // the index of the current reading
 float tempReadingsTotal = 0.0;
@@ -50,8 +50,8 @@ bool RelayON = false;
 //int heatStatus;                                 //Used for pushingbox
 
 //Temperature Range
-float LowTemp = 50.0;
-float HighTemp = 65.0;
+float LowTemp = 55.0;
+float HighTemp = 70.0;
 
 //Temp Check Loop Delay
 long previousMillis = 0;
